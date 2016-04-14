@@ -15,8 +15,12 @@ USE this script:
 ##########################
 1.   edge.py does the same as edge_detect, but it cut the image in counts. For example, if the pixels has N_COUNTS< 90, then the pixels has 0 Counts.
 2.   cut.py It cut the selected order. use: python imagen_bordes_from_edge.py  cut.py x,y
+
 x= marks the central position of the order
+
 y=1 starts from the first pixel. 
+
 The code looks for the borders of the order and creates a new image where counts=1 in the order and counts=0 elsewhere.
+
 This will be used for straightening of the Echelle order
 
