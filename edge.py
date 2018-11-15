@@ -1,92 +1,114 @@
-#!/Ureka/Ureka/variants/common/bin/python
+#!/usr/env/ python
 
 
-#IDEA: EDGE DETECTION. FLATS 
+##########################################################
+#
+# EDGE detection: It reads the FLATS and it creates an image
+# with highlighted edges.   
+# Output: RESTA.fits and BORDES.fits
+#
+#
+#########################################################
 
 import sys,os,string
 
 import astropy
-from astropy.io import fits
+from astropy.io import fits as pyfits
 import numpy as np
-import pyfits
 import scipy
 from scipy import ndimage
 
+#reading the image:
 imagen_in=sys.argv[1]
-
-#hdulist= fits.open('r0252_STAR_TRA_20s_BIAS.fits')
-#hdulist= fits.open(imagen)
-#hdulist.info()
-#imag=scidata[]
-
 pyfits.info(imagen_in)
+#read headers headers
 header=pyfits.getheader(imagen_in)
+
+
 #print header['naxis']
 
+# imagen to an array 
 imagen=pyfits.getdata(imagen_in,0)
 
 ####    Display the imagen   ##########
+#
+# Se puede comentar si se quiere
+#
+# Comment if you need so.
+#
+#########################
+import matplotlib.pyplot as plt
+plt.imshow(imagen)
+plt.show()
 
-#import matplotlib.pyplot as plt
-#plt.imshow(imagen)
-#plt.show()
- 
 ######################################
 
+
+#im=ndimage.sobel(imagen,axis=0,mode='constant')
+#plt.imshow(im)
+#plt.show()
+#im=ndimage.gaussian_filter(im, 8)
 
 
 
 sx = ndimage.sobel(imagen, axis=-1, mode='reflect')
+#sy = ndimage.sobel(im, axis=0, mode='constant')
+#sob = np.hypot(sx, im)
 sob = np.hypot(sx,imagen)
 
 #plt.imshow(sob)
 #plt.show()
 
+###################################################
+#
+#
+# EDITAR EL NUMERO SEGUN EL TIPO DE IMAGEN
+# EN MI CASO ES 2045
+#
+# EDIT NUMBER ACCORDING TO THE IMAGE BINNING
+# IN MY CASE IS 2045 
+#
+##############################################
+
 resta=(sob - imagen)  
-resta=resta[:4224]  #crop image en 2045 pixel en y
+resta=resta[:2045]  #crop image in 2045 pixel on the  y axis
 
+#if (resta  < 100):
+#    resta=0
+#else:
+#    resta = resta
 
-pyfits.writeto("RESTA_RED_FLAT.fits",resta,header)
-
-
-from scipy import ndimage
-import pylab as pl
-from  skimage.morphology import medial_axis
-import matplotlib.pyplot as plt
-from  skimage.morphology import skeletonize
+pyfits.writeto("RESTA.fits",resta,header)
 
 
 filtdat = resta #ndimage.median_filter(resta, size=(1,1))
-hi_dat = np.histogram(resta, bins=np.arange(256))
-hi_filtdat = np.histogram(filtdat, bins=np.arange(256))
 
-###########
-##
+
+###########################################
 #
+# EDITAR EL 300. Corresponde al N de cuentas de la resta del flat- la imagen con los bordes.
+# QUE HACE?
+# Mira todos los lugares con mas de 300 cuentas y los deja en cero. La idea es tener los bordes
+# con cuentas distintas de cero y el "flat del orden echelle" en cero. Por que?
+# Porque en la siguiente rutina se mapea entre los bordes de cada orden. es como si fuera 
+# un canal y alguien ciego recorre el canal chocando con los bordes. asi se mapea.
 #
-# N_COUNTS. EDIT IT!! 
+# EDIT THE NUMBER 300. IT corresponds to the N of counts limit that will be used as useful data.
+# I.e. if counts are < 300 then are set to 0
 #
-#
-#
-##
-###########
+###########################################
 
 i=1
 for i in range (len(filtdat)):
 #    print len(filtdat)
     for j in range(1021):
-        if (filtdat[i,j] <90): #COUNTS!!!! #############################!!
+        #if (filtdat[i,j+3] > filtdat[i,j]) and (filtdat[i,j] > filtdat[i,j-3]) and (filtdat[i,j] > 30): 
+        if (filtdat[i,j] <300):
             filtdat[i,j]=0
         else:
             filtdat[i,j]
 
 
-pyfits.writeto("BORDES_RED_FLAT.fits",filtdat,header)
-
-##################
-#
-# mmora@astro.puc.cl
-#
-##################
+pyfits.writeto("BORDES.fits",filtdat,header)
 
 
